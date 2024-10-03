@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS consultores (
 );
 
 INSERT INTO consultores (nome, consultor_email, senha, cpf, telefone, tipo, sobre, whatsApp, foto) 
-VALUES ('Roberto', 'ralves@gmail.com', '123456', '85923791256', '1135694523', 'consultor', 'Especialista em marketing de conteúdo, com paixão por storytelling e criação de conteúdo de alta qualidade.', '11953486834', 'imagens/foto1.jpg');
+VALUES ('Roberto', 'jvitorcavalcante18@gmail.com', '123456', '85923791256', '1135694523', 'consultor', 'Especialista em marketing de conteúdo, com paixão por storytelling e criação de conteúdo de alta qualidade.', '11953486834', 'imagens/foto1.jpg');
 
 INSERT INTO consultores (nome, consultor_email, senha, cpf, telefone, tipo, sobre, whatsApp, foto)
 VALUES ('Jose', 'esoj@gmail.com', 'senha123', '12345678987', '1125459687', 'consultor', 'Especialista em transformação digital, auxiliando empresas a otimizarem seus processos e adotarem novas tecnologias', '11948695738', 'imagens/foto2.jpg');

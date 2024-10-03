@@ -3,7 +3,6 @@ const router = express.Router()
 const connection = require('../database')
 const authCliente = require('../middleware/authCliente')
 const nodemailer = require('nodemailer');
-const bodyParser = require('body-parser')
 require('dotenv').config()
 
 //Configuração do nodemailer
@@ -128,7 +127,7 @@ router.post('/agendarvisita', (req, res) => {
 
     const formatedDate = data_visita.split('-')[2]+'/'+data_visita.split('-')[1]+'/'+data_visita.split('-')[0];
 
-    connection.query("SELECT * FROM visitas WHERE imoveisID = ? AND data_visita = ?", [imovelID, data_visita], (req, result) => {
+    connection.query("SELECT * FROM visitas WHERE imoveisID = ? AND data_visita = ?", [imovelID, data_visita], (err, result) => {
         if(result.length > 0){
             return res.send(JSON.stringify({agendado: false, mensagem: "A data solicitada já esta reservada"}))
         }
@@ -142,7 +141,7 @@ router.post('/agendarvisita', (req, res) => {
         `
     })
 
-    connection.query("SELECT consultor_email FROM consultores WHERE consultorId = ?", [consultorID], (req, result) =>{
+    connection.query("SELECT consultor_email FROM consultores WHERE consultorId = ?", [consultorID], (err, result) =>{
         consultorEmail = result[0].consultor_email
     })
 

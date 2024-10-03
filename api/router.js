@@ -6,6 +6,7 @@ app.use('/imoveis', require('./rotas/imoveis'))
 app.use('/visita', require('./rotas/visita'))
 app.use('/consultores', require('./rotas/consultores'))
 app.use('/clientes', require('./rotas/clientes'))
+app.use('/propostas', require('./rotas/propostas'))
 
 app.use((req, res, next) => {
     console.log(`Requisição para: ${req.url}`);

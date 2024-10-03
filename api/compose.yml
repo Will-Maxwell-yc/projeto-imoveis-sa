@@ -26,6 +26,7 @@ services:
       - ./tabelas/04_visitas.sql:/docker-entrypoint-initdb.d/04_visitas.sql
       - ./tabelas/05_imagens.sql:/docker-entrypoint-initdb.d/05_imagens.sql
       - ./tabelas/06_favoritos.sql:/docker-entrypoint-initdb.d/06_favoritos.sql
+      - ./tabelas/07_propostas.sql:/docker-entrypoint-initdb.d/07_propostas.sql
       - ./my_custom.cnf:/etc/mysql/conf.d/my_custom.cnf
     networks:
       - minha_rede
