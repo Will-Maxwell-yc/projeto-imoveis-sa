@@ -17,7 +17,7 @@ function enviarEmail(remetente, destinatario, imovelID, corpoCliente, valor_prop
     const mailOptions = {
         from: remetente,
         to: destinatario,
-        subject: 'Solicitação de visita',
+        subject: 'Solicitação de proposta',
         html: `
             <p>Olá</p>
             <p>O cliente enviou uma oferta nova de preço para o seu imóvel</p>
@@ -37,10 +37,24 @@ function enviarEmail(remetente, destinatario, imovelID, corpoCliente, valor_prop
     })
 }
 
-router.get('/verpropostasenviadas', (req, res) => {
+router.get('/verpropostasenviadascliente', (req, res) => {
     const { clienteID } = req.query
 
     let query = `SELECT * FROM propostas WHERE clienteID = ${clienteID}`
+
+    connection.query(query, (err, result) => {
+        if(err){
+            return res.status(500).send(err)
+        }
+
+        return res.send(result)
+    })
+})
+
+router.get('/verpropostasrecebidasconsultor', (req, res) => {
+    const { consultorID } = req.query
+
+    let query = `SELECT * FROM propostas WHERE consultorID = ${consultorID}`
 
     connection.query(query, (err, result) => {
         if(err){
@@ -55,10 +69,6 @@ router.post('/enviarproposta', (req, res) => {
     const { clienteID, consultorID, imovelID, valor_proposta } = req.body
     let consultorEmail
     let dados_cliente
-
-    connection.query(`SELECT consultorId FROM imoveis WHERE imoveisID = ${imovelID}`, (err, result) => {
-        console.log(result[0].consultorId)
-    })
 
     connection.query(`SELECT consultor_email FROM consultores WHERE consultorId = ${consultorID}`, (err, result) =>{
         consultorEmail = result[0].consultor_email
@@ -78,7 +88,25 @@ router.post('/enviarproposta', (req, res) => {
             return res.status(500).send(err)
         }
         enviarEmail("jvitorcavalcante18@gmail.com", consultorEmail, imovelID, dados_cliente, valor_proposta)
-        return res.send(result)
+        return res.send(true)
+    })
+})
+
+router.put('/editarstatusproposta', (req, res) => {
+    const { propostaID } = req.query
+    const { status_proposta } = req.body
+
+    if(status_proposta != "cancelada" && status_proposta != "aceita"){
+        return res.send(false)
+    }
+
+    let query = `UPDATE propostas SET status_proposta = "${status_proposta}" WHERE propostaID = ${propostaID}`
+    connection.query(query, (err, result) => {
+        if(err){
+            return res.status(500).send(err)
+        }
+
+        return res.send(true)
     })
 })
 
