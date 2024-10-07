@@ -90,23 +90,33 @@ router.post('/', authCliente, (req, res) => {
     })
 })
 router.get('/visitas', (req, res) => {
-    const {clienteID, consultorID} = req.query
+    const { clienteID, consultorID } = req.query;
 
-    let query = "SELECT v.visitaId, ci.clienteId, i.imoveisID, co.consultorId, v.data_visita, v.comentario, i.tipo, i.endereco, i.numero, i.bairro, i.cidade, i.cep, i.quartos, i.banheiros, i.preco_venda, i.preco_aluguel, i.tamanho, i.disponibilidade, i.vagas, co.nome AS nome_consultor, co.consultor_email, ci.email AS cliente_email, ci.nome AS nome_cliente FROM visitas AS v JOIN imoveis AS i ON v.imoveisID = i.imoveisID JOIN clientes AS ci ON v.clienteId = ci.clienteId JOIN consultores AS co ON v.consultorId = co.consultorId"
+    let query = `
+        SELECT v.visitaId, v.comentario, v.clienteId, i.imoveisID, v.consultorId, v.data_visita, v.comentario, 
+        i.tipo, i.endereco, i.numero, i.bairro, i.cidade, i.cep, i.quartos, i.banheiros, i.preco_venda, i.preco_aluguel, 
+        i.tamanho, i.disponibilidade, i.vagas, co.nome AS nome_consultor, co.consultor_email, 
+        IFNULL(ci.email, v.email_cliente) AS cliente_email, IFNULL(ci.nome, v.nome_cliente) AS nome_cliente
+        FROM visitas AS v 
+        JOIN imoveis AS i ON v.imoveisID = i.imoveisID 
+        JOIN consultores AS co ON v.consultorId = co.consultorId 
+        LEFT JOIN clientes AS ci ON v.clienteId = ci.clienteId
+    `;
 
-    if(clienteID){
-        query += ` WHERE v.clienteId = ${clienteID}`
-    }else if(consultorID){
-        query += ` WHERE v.consultorId = ${consultorID}`
+    if (clienteID) {
+        query += ` WHERE v.clienteId = ${clienteID}`;
+    } else if (consultorID) {
+        query += ` WHERE v.consultorId = ${consultorID}`;
     }
 
     connection.query(query, (err, result) => {
-        if(err){
-            return res.status(500).send(err)
+        if (err) {
+            return res.status(500).send(err);
         }
-        res.send(result)
-    })
-})
+        res.send(result);
+    });
+});
+
 router.get('/getconsultores', (req, res) => {
     const {clienteID} = req.query
 
@@ -122,53 +132,59 @@ router.get('/getconsultores', (req, res) => {
 router.post('/agendarvisita', (req, res) => {
     const { clienteID, consultorID, imovelID, data_visita, comentario, nome, email } = req.body
 
-    let dados_cliente
-    let consultorEmail
+    let dados_cliente;
+    let consultorEmail;
 
     // Verifica se a data já está reservada
     connection.query("SELECT * FROM visitas WHERE imoveisID = ? AND data_visita = ?", [imovelID, data_visita], (req, result) => {
         if(result.length > 0) {
-            return res.send(JSON.stringify({agendado: false, mensagem: "A data solicitada já está reservada"}))
+            return res.send(JSON.stringify({agendado: false, mensagem: "A data solicitada já está reservada"}));
         }
+
         if (clienteID) {
+            // Cliente cadastrado
             connection.query("SELECT nome, email, celular FROM clientes WHERE clienteId = ?", [clienteID], (err, result) => {
                 if (err) {
-                    return res.status(500).send(err)
+                    return res.status(500).send(err);
                 }
                 dados_cliente = `
                     Nome: ${result[0].nome},
                     Email: ${result[0].email},
                     Telefone: ${result[0].celular}
-                `
-            })
+                `;
+            });
         } else {
-            // Se o cliente não está cadastrado, usa o nome e email fornecidos
+            // Cliente não cadastrado, usa o nome e email fornecidos
             dados_cliente = `
                 Nome: ${nome},
                 Email: ${email}
-            `
+            `;
         }
+
+        // Busca o email do consultor
         connection.query("SELECT consultor_email FROM consultores WHERE consultorId = ?", [consultorID], (err, result) => {
             if (err) {
-                return res.status(500).send(err)
+                return res.status(500).send(err);
             }
-            consultorEmail = result[0].consultor_email
-        })
-        // Insere a visita no banco de dados
+            consultorEmail = result[0].consultor_email;
+        });
+
+        // Insere a visita no banco de dados (clienteID pode ser null, e nome/email fornecidos se cliente não estiver cadastrado)
         connection.query(
-            "INSERT INTO visitas (clienteId, imoveisID, consultorId, data_visita, comentario) VALUES (?, ?, ?, ?, ?)",
-            [clienteID || null, imovelID, consultorID, data_visita, comentario], // clienteID pode ser null
+            "INSERT INTO visitas (clienteId, imoveisID, consultorId, data_visita, comentario, nome_cliente, email_cliente) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [clienteID || null, imovelID, consultorID, data_visita, comentario, nome || null, email || null], 
             (err, result) => {
                 if (err) {
-                    return res.status(500).send(err)
+                    return res.status(500).send(err);
                 }
                 // Envia o email após agendar
-                enviarEmail("juninhojoka11@gmail.com", consultorEmail, imovelID, dados_cliente, data_visita, comentario)
-                return res.send({ agendado: true })
+                enviarEmail("juninhojoka11@gmail.com", consultorEmail, imovelID, dados_cliente, data_visita, comentario);
+                return res.send({ agendado: true });
             }
-        )
-    })
-})
+        );
+    });
+});
+
 
 router.get('/cancelarvisita/:id', (req, res) => {
     const visitaId = req.params.id
