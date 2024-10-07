@@ -56,7 +56,7 @@ const Login = () => {
                             </Li>
                             <Li>
                                 <NavLink
-                                    to="/alertas"
+                                    to="/propostas"
                                 >
                                     <FaBell /> Propostas enviadas
                                 </NavLink>

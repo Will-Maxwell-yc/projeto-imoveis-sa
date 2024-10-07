@@ -15,6 +15,7 @@ import Imovel from './Pages/Imovel/Imovel.js'
 import PageCorretor from './Pages/Corretor/index.jsx'
 import Favoritos from './Pages/Favoritos/Favoritos.jsx'
 import Visitas from './Pages/Visitas/index.jsx';
+import Propostas from './Pages/Propostas/Propostas.jsx';
 
 const App = () => {
   return (
@@ -32,6 +33,7 @@ const App = () => {
           <Route path='/cadastrar' element={<Cadastrar />} />
           <Route path='/favoritos' element={<Favoritos />} />
           <Route path='/visitas' element={<Visitas />} />
+          <Route path='/propostas' element={<Propostas />} />
           <Route path='/' element={<Home />} />
           <Route path='*' element={<Cadastrar />} />
           <Route path='/home' element={<Home />} />
