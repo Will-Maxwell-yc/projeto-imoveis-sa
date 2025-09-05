@@ -25,7 +25,7 @@ export const ContainerFiltro = styled.div`
         gap: 10px;
     }
 
-    @media (max-width: 650px) {
+    @media (max-width: 720px) {
         height: 300px;
         display: grid;
         justify-content: normal; 
@@ -46,7 +46,7 @@ export const ContainerInput = styled.div`
         gap: 10px;
     }
 
-    @media (max-width: 650px){
+    @media (max-width: 720px){
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
@@ -77,7 +77,7 @@ export const Button = styled.button`
         font-size: 16px;
     }
 
-    @media (max-width: 650px){
+    @media (max-width: 720px){
         width: 100%;
         grid-column: 1 / span 2;
         font-size: 25px;
@@ -107,7 +107,12 @@ export const Codigo = styled.input`
     }
 
     @media (max-width: 980px){
-        width: 110px;
+        width: 130px;
+        font-size: 16px;
+    }
+
+    @media (max-width: 720px){
+        width: 280px;
         font-size: 16px;
     }
 
@@ -144,7 +149,7 @@ export const Input = styled.div`
 
 export const IconDrop = styled.i`
     position: absolute;
-    right: 0.5rem;
+    right: 0.1rem;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
@@ -188,10 +193,10 @@ export const LiTipo = styled.li`
 `
 
 export const UlOptions = styled.ul`
-    position: relative;
-    width: 280px;
+    position: absolute;
+    width: 100%;
     padding: 20px;
-    right: 20px;
+    right: 0px;
     transition: opacity 0.5s ease, max-height 0.5s ease;
     background: #ffffff;
     border-radius: 8px;
@@ -199,16 +204,10 @@ export const UlOptions = styled.ul`
     z-index: 2;
     margin-top: 25px;
 
-    @media (max-width: 1280px){
-        width: 250px;
-    }
-
-    @media (max-width: 950px){
-        position: absolute;
-        width: 100%;
-        right: 0;
+    @media (max-width: 1380px){
         padding: 0 10px;
     }
+
     @media (max-width: 450px){
         width: 150px;
         margin-top: 25px;
