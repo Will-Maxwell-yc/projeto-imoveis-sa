@@ -83,10 +83,10 @@ const Card = () => {
           onSlideChange={handleSlideChange}
           spaceBetween={10}
           navigation
-          autoplay={{
-            delay: 3500,
-            disableOnInteraction: false
-          }}
+          // autoplay={{
+          //   delay: 3500,
+          //   disableOnInteraction: false
+          // }}
         >
           {products.map((item) => (
             <SwiperSlide key={item.consultorId}>

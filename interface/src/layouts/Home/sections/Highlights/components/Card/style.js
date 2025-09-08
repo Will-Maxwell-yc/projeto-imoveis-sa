@@ -9,8 +9,8 @@ export const Wrapper = styled.div`
     overflow: hidden;
     cursor: pointer;
 
-    @media (max-width: 550px){
-        width: 358px;
+    @media (max-width: 600px){
+        width: 100%;
         margin: 55px 0;
     }
 

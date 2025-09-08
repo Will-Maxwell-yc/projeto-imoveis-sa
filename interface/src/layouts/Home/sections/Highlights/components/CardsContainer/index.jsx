@@ -96,10 +96,10 @@ const CardsContainer = () => {
                     onSlideChange={handleSlideChange}
                     spaceBetween={0}
                     navigation
-                    autoplay={{
-                        delay: 3500,
-                        disableOnInteraction: false
-                    }}
+                    // autoplay={{
+                    //     delay: 3500,
+                    //     disableOnInteraction: false
+                    // }}
                 >
                     {products.map((prod, index) => (
                         <SwiperSlide>

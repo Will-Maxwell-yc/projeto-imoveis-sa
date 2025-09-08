@@ -27,6 +27,8 @@ export const Container = styled.div`
         font-size: 20px;
         color: black;
     }
+
+    
 `
 
 export const TitleSection = styled.div`

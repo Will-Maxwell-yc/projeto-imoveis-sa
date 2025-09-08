@@ -16,7 +16,7 @@ export const Wrapper = styled.div`
     }
 
     @media (max-width: 900px){
-        max-width: 650px;
+        max-width: 700px;
         margin: 0 auto;
     }
 `
@@ -28,15 +28,19 @@ export const ContainerFiltro = styled.div`
     height: 160px;
     background-color: black;
     padding: 20px;
+    position: relative;
     gap: 32px;
+    justify-content: center; 
+    
     
     @media (max-width: 1280px){
         gap: 10px;
     }
 
-    @media (max-width: 650px) {
+    @media (max-width: 720px) {
         height: 300px;
         display: grid;
+        justify-content: normal; 
     }
 `
 
@@ -44,19 +48,21 @@ export const ContainerInput = styled.div`
     width: 100%;
     display: flex;
     gap: 32px;
-
+    
+    
     @media (max-width: 1280px){
         gap: 10px;
     }
+
     @media (max-width: 950px){
         gap: 10px;
     }
-    @media (max-width: 650px){
+
+    @media (max-width: 720px){
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
     }
-
 `
 
 export const Button = styled.button`
@@ -64,8 +70,8 @@ export const Button = styled.button`
     background-color: #212121;
     display: flex;
     color: #FFFFFF;
-    ${({ error }) => 
-        error && 
+    ${({ error }) =>
+        error &&
         css`
         border: 2px solid red; 
     `}
@@ -75,6 +81,7 @@ export const Button = styled.button`
     justify-content: center;
     align-items: center;
     border-radius: 8px;
+    position: relative;
     padding: 10px;
 
     @media (max-width: 950px){
@@ -82,7 +89,7 @@ export const Button = styled.button`
         font-size: 16px;
     }
 
-    @media (max-width: 650px){
+    @media (max-width: 720px){
         width: 100%;
         grid-column: 1 / span 2;
         font-size: 25px;
@@ -94,6 +101,7 @@ export const Button = styled.button`
 export const Codigo = styled.input`
     width: 250px;
     background-color: #FFFFFF;
+    position: relative;
     display: flex;
     border: 2px solid ${props => (props.error ? 'red' : '#888')};
     &:focus {
@@ -111,7 +119,12 @@ export const Codigo = styled.input`
     }
 
     @media (max-width: 980px){
-        width: 110px;
+        width: 130px;
+        font-size: 16px;
+    }
+
+    @media (max-width: 720px){
+        width: 280px;
         font-size: 16px;
     }
 
@@ -148,20 +161,13 @@ export const Input = styled.div`
 
 export const IconDrop = styled.i`
     position: absolute;
-    right: 0.5rem;
+    right: 0.1rem;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
 `
 
-export const LiTipo = styled.li`
-    right: 5px;
-    display: flex;
-    cursor: pointer;
-    height: 55px;
-`
-
-export const UlOptions = styled.ul`
+export const ListaCompra = styled.ul`
     position: relative;
     width: 280px;
     padding: 20px;
@@ -173,15 +179,51 @@ export const UlOptions = styled.ul`
     z-index: 1;
     margin-top: 25px;
 
+    @media (max-width: 1280px){
+        width: 250px;   
+    }
+
     @media (max-width: 950px){
-        position: absolute;
-        width: 100%;
-        right: 0;
+        width: 174px;
+        padding:  10px;
+        right: 5px;
+    }
+
+    @media (max-width: 450px){
+        width: 150px;
+        margin-top: 25px;
+        right: 5px;
+    }
+    
+`
+
+export const LiTipo = styled.li`
+    right: 5px;
+    display: flex;
+    cursor: pointer;
+    height: 55px;
+`
+
+export const UlOptions = styled.ul`
+    position: absolute;
+    width: 100%;
+    padding: 20px;
+    right: 0px;
+    transition: opacity 0.5s ease, max-height 0.5s ease;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 2px solid #000;
+    z-index: 2;
+    margin-top: 25px;
+
+    @media (max-width: 1380px){
         padding: 0 10px;
     }
+
     @media (max-width: 450px){
-        margin-top: 19px;
-        padding: 0 10px;
+        width: 150px;
+        margin-top: 25px;
+        right: 5px;
     }
 `
 
@@ -196,6 +238,7 @@ export const UlBairros = styled.ul`
     right: 20px;
     border-radius: 8px;
     border: 2px solid #000;
+    z-index: 2;
 
     @media (max-width: 1280px){
         width: 250px;
@@ -209,7 +252,6 @@ export const UlBairros = styled.ul`
 
     @media (max-width: 450px){
         margin-top: 20px;
-        z-index: 1;
         width: 150px;
         right: 15px;
         padding: 15px;
@@ -239,10 +281,10 @@ export const ErroText = styled.p`
     color: red;
     font-size: large;
 
-    @media (max-width: 450px ) {
-        top: 58%;
-        padding-left: 30px;
+    @media (max-width: 650px ) {
+        top: 55%;
         font-weight: 700;
         font-size: 18px;
+        left: 20%; 
     }
 `
