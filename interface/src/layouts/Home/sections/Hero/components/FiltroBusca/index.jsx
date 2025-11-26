@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { ContainerInput, Codigo, IconDrop, Input, Button, Wrapper, UlOptions, LiTipo, CheckBoxWrapper, CheckBox, CheckBoxLabel, ErroText, ContainerFiltro } from './style'
@@ -8,9 +8,7 @@ const FiltroBusca = () => {
   const navigate = useNavigate()
 
   const [produtos, setProdutos] = useState([])
-  const [showBairros, setShowBairros] = useState(false)
-  const [showTipo, setShowTipo] = useState(false)
-  const [showCompra, setShowCompra] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState(null) // controla o dropdown aberto
   const [selectedBairro, setSelectedBairro] = useState([])
   const [selectedTipo, setSelectedTipo] = useState([])
   const [selectedCompra, setSelectedCompra] = useState([])
@@ -20,6 +18,8 @@ const FiltroBusca = () => {
   const [inputErro, setInputErro] = useState(false)
   const [buttonError, setButtonError] = useState(false)
 
+  const closeTimeout = useRef(null)
+
   useEffect(() => {
     if (error) {
       setError('')
@@ -28,61 +28,66 @@ const FiltroBusca = () => {
     }
   }, [selectedBairro, selectedCompra, selectedTipo, codigo])
 
-  const handleMouseEnter = (setter) => () => {
+  // --- Controle de dropdown ---
+  const handleMouseEnter = (name) => () => {
     if (window.innerWidth > 950) {
-      setter(true)
+      // se existir um timeout de fechamento, cancela
+      if (closeTimeout.current) {
+        clearTimeout(closeTimeout.current)
+        closeTimeout.current = null
+      }
+      setOpenDropdown(name)
     }
   }
 
-  const handleMouseLeave = (setter) => () => {
-    if (window.innerWidth > 950) {
-      setter(false)
+  const handleMouseLeave = (name) => () => {
+    if (window.innerWidth > 950 && openDropdown === name) {
+      // aguarda 500ms antes de fechar
+      closeTimeout.current = setTimeout(() => {
+        setOpenDropdown(null)
+      }, 500)
     }
   }
 
-  const handleDropdownClick = (setter) => () => {
-    setter((prev) => !prev)
+  const handleDropdownClick = (name) => () => {
+    if (window.innerWidth <= 950) {
+      setOpenDropdown(prev => prev === name ? null : name)
+    }
   }
 
+  // --- Seleções ---
   const handleBairroChange = (bairro) => {
-    if (selectedBairro.includes(bairro)) {
-      setSelectedBairro(selectedBairro.filter(item => item !== bairro))
-    } else {
-      setSelectedBairro([...selectedBairro, bairro])
-    }
-  }
-  const handleTipoChange = (tipo) => {
-    if (selectedTipo.includes(tipo)) {
-      setSelectedTipo(selectedTipo.filter(item => item !== tipo))
-    } else {
-      setSelectedTipo([...selectedTipo, tipo])
-    }
-  }
-  const handleTransacaoChange = (disponibilidade) => {
-    if (selectedCompra.includes(disponibilidade)) {
-      setSelectedCompra(selectedCompra.filter(item => item !== disponibilidade))
-    } else {
-      setSelectedCompra([...selectedCompra, disponibilidade])
-    }
+    setSelectedBairro(prev =>
+      prev.includes(bairro) ? prev.filter(item => item !== bairro) : [...prev, bairro]
+    )
   }
 
+  const handleTipoChange = (tipo) => {
+    setSelectedTipo(prev =>
+      prev.includes(tipo) ? prev.filter(item => item !== tipo) : [...prev, tipo]
+    )
+  }
+
+  const handleTransacaoChange = (disponibilidade) => {
+    setSelectedCompra(prev =>
+      prev.includes(disponibilidade) ? prev.filter(item => item !== disponibilidade) : [...prev, disponibilidade]
+    )
+  }
+
+  // --- Filtro ---
   const filtrarImoveis = () => {
     let disponibilidadeQuery = []
     let query = ''
-
     const imovelID = codigo.trim()
-
     const filterCheck = selectedBairro.length > 0 || selectedCompra.length > 0 || selectedTipo.length > 0
 
     if (imovelID && filterCheck) {
-      console.log('Tipo de busca não permitida')
       setError('Tipo de busca não permitida')
       setInputErro(true)
       return
     }
 
     if (!imovelID && !filterCheck) {
-      console.log('Por favor, selecione pelo menos um filtro.')
       setError('Por favor, selecione pelo menos um filtro')
       setButtonError(true)
       setInputErro(false)
@@ -90,119 +95,96 @@ const FiltroBusca = () => {
     }
 
     if (imovelID && !filterCheck) {
-      fetch(`http://localhost:3001/imoveis/buscarimovelid?id=${imovelID}`, { method: 'GET', redirect: 'follow' })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Erro na resposta da API')
-          }
-          return response.json();
+      fetch(`http://localhost:3001/imoveis/buscarimovelid?id=${imovelID}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Erro na resposta da API')
+          return res.json()
         })
         .then((data) => {
-          console.log('ID selecionado :', data)
           setProdutos(data)
-
           if (data.length > 0) {
-            navigate(`/imovel?id=${imovelID}`);
+            navigate(`/imovel?id=${imovelID}`)
           } else {
-            console.log('Não foram encontrados imóveis com o código fornecido.')
+            setError('Não foram encontrados imóveis com o código fornecido.')
           }
         })
-        .catch((error) => {
-          console.error('Erro ao buscar imóvel por ID:', error)
-          setError('Erro ao buscar imóvel por ID');
-        })
+        .catch(() => setError('Erro ao buscar imóvel por ID'))
       return
     }
 
     if (!imovelID && filterCheck) {
-      if (selectedCompra.includes('Alugar')) {
-        disponibilidadeQuery.push('aluguel');
-      }
-
-      if (selectedCompra.includes('Comprar')) {
-        disponibilidadeQuery.push('venda');
-      }
-
-      if (selectedCompra.includes('Alugar') && selectedCompra.includes('Comprar')) {
-
-        disponibilidadeQuery.push('venda_e_aluguel');
-      }
+      if (selectedCompra.includes('Alugar')) disponibilidadeQuery.push('aluguel')
+      if (selectedCompra.includes('Comprar')) disponibilidadeQuery.push('venda')
+      if (selectedCompra.includes('Alugar') && selectedCompra.includes('Comprar')) disponibilidadeQuery.push('venda_e_aluguel')
 
       if (disponibilidadeQuery.length > 0) {
-        query += `?disponibilidade=${disponibilidadeQuery.join(',')}`;
+        query += `?disponibilidade=${disponibilidadeQuery.join(',')}`
       }
-
       if (selectedTipo.length) {
         query += query ? `&tipo=${selectedTipo.join(',')}` : `?tipo=${selectedTipo.join(',')}`
       }
-
       if (selectedBairro.length) {
         query += query ? `&bairro=${selectedBairro.join(',')}` : `?bairro=${selectedBairro.join(',')}`
       }
 
-      fetch("http://localhost:3001/imoveis/busca" + query, { method: "GET", redirect: "follow" })
-        .then((response) => response.json())
+      fetch("http://localhost:3001/imoveis/busca" + query)
+        .then(res => res.json())
         .then((data) => {
-          console.log('Filtros selecionado :', data)
           setProdutos(data)
           if (data.length > 0) {
             navigate(`/imoveis${query}`)
           } else {
-            console.log('Não foram encontrados imóveis com os filtros selecionados.')
+            setError('Não foram encontrados imóveis com os filtros selecionados.')
           }
         })
-        .catch((error) => {
-          console.error('Erro ao buscar imóveis:', error)
+        .catch(() => {
           setError('Erro ao buscar imóveis')
           setInputErro(false)
           setButtonError(true)
         })
-      return
-    }
-    console.log('Por favor, selecione pelo menos um filtro.')
-    setError('Por favor, selecione pelo menos um filtro')
-
-  }
-
-  const getDisplayTextTipo = () => {
-    return selectedTipo.length === 0 ? 'Tipo de imóveis' : selectedTipo.join(', ')
-  }
-
-  const getDisplayTextBairro = () => {
-    if (selectedBairro.length === 0) {
-      return 'Filtrar bairros'
-    } else if (selectedBairro.length > 2) {
-      return `${selectedBairro.slice(0, 2).join(', ')} ... ${selectedBairro.length - 2}`
-    } else {
-      return selectedBairro.join(', ')
     }
   }
 
-  const getDisplayTextCompra = () => {
-    return selectedCompra.length === 0 ? 'Venda / Aluguel' : selectedCompra.join(', ');
-  }
+  // const getDisplayTextTipo = () => {
+  //   return selectedTipo.length === 0 ? 'Imóveis' : selectedTipo.join(', ')
+  // }
+
+  // const getDisplayTextBairro = () => {
+  //   if (selectedBairro.length === 0) {
+  //     return 'Bairros'
+  //   } else if (selectedBairro.length > 1) {
+  //     return `${selectedBairro.slice(0, 1).join(', ')} ... ${selectedBairro.length - 1}`
+  //   } else {
+  //     return selectedBairro.join(', ')
+  //   }
+  // }
+
+  // const getDisplayTextCompra = () => {
+  //   return selectedCompra.length === 0 ? 'Disponibilidade' : selectedCompra.join(', ');
+  // }
 
   return (
     <Wrapper>
       <ContainerFiltro>
         <ContainerInput>
           {showErroMessage && <ErroText error={error} />}
+
+          {/* Disponibilidade */}
           <Input
-            onMouseEnter={handleMouseEnter((setShowCompra))}
-            onMouseLeave={handleMouseLeave((setShowCompra))}
-            onClick={handleDropdownClick((setShowCompra))}
+            onMouseEnter={handleMouseEnter('compra')}
+            onMouseLeave={handleMouseLeave('compra')}
+            onClick={handleDropdownClick('compra')}
           >
-            {getDisplayTextCompra()}
-            <IconDrop>
-              <IoIosArrowDropdownCircle />
-            </IconDrop>
-            {showCompra && (
+            Disponibilidade
+            <IconDrop><IoIosArrowDropdownCircle /></IconDrop>
+            {openDropdown === 'compra' && (
               <UlOptions>
                 {['Alugar', 'Comprar'].map(disponibilidade => (
                   <LiTipo key={disponibilidade}>
                     <CheckBoxWrapper>
                       <CheckBox
                         type='checkbox'
+                        id={disponibilidade}
                         value={disponibilidade}
                         checked={selectedCompra.includes(disponibilidade)}
                         onChange={() => handleTransacaoChange(disponibilidade)}
@@ -214,22 +196,23 @@ const FiltroBusca = () => {
               </UlOptions>
             )}
           </Input>
+
+          {/* Imóveis */}
           <Input
-            onMouseEnter={handleMouseEnter((setShowTipo))}
-            onMouseLeave={handleMouseLeave((setShowTipo))}
-            onClick={handleDropdownClick((setShowTipo))}
+            onMouseEnter={handleMouseEnter('tipo')}
+            onMouseLeave={handleMouseLeave('tipo')}
+            onClick={handleDropdownClick('tipo')}
           >
-            {getDisplayTextTipo()}
-            <IconDrop>
-              <IoIosArrowDropdownCircle />
-            </IconDrop>
-            {showTipo && (
+            Imóveis
+            <IconDrop><IoIosArrowDropdownCircle /></IconDrop>
+            {openDropdown === 'tipo' && (
               <UlOptions>
                 {['Casa', 'Apartamento'].map(tipo => (
                   <LiTipo key={tipo}>
                     <CheckBoxWrapper>
                       <CheckBox
                         type='checkbox'
+                        id={tipo}
                         value={tipo}
                         checked={selectedTipo.includes(tipo)}
                         onChange={() => handleTipoChange(tipo)}
@@ -241,16 +224,16 @@ const FiltroBusca = () => {
               </UlOptions>
             )}
           </Input>
+
+          {/* Bairros */}
           <Input
-            onMouseEnter={handleMouseEnter((setShowBairros))}
-            onMouseLeave={handleMouseLeave((setShowBairros))}
-            onClick={handleDropdownClick((setShowBairros))}
+            onMouseEnter={handleMouseEnter('bairro')}
+            onMouseLeave={handleMouseLeave('bairro')}
+            onClick={handleDropdownClick('bairro')}
           >
-            {getDisplayTextBairro()}
-            <IconDrop>
-              <IoIosArrowDropdownCircle />
-            </IconDrop>
-            {showBairros && (
+            Bairro
+            <IconDrop><IoIosArrowDropdownCircle /></IconDrop>
+            {openDropdown === 'bairro' && (
               <UlOptions>
                 {['Bela Vista', 'Copacabana', 'Centro', 'Pinheiros', 'Botafogo', 'Barra da Tijuca'].map(bairro => (
                   <LiTipo key={bairro}>
@@ -269,18 +252,17 @@ const FiltroBusca = () => {
               </UlOptions>
             )}
           </Input>
+
           <Codigo
             placeholder='Código'
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
             error={inputErro}
           />
-          <Button
-            onClick={filtrarImoveis}
-            error={buttonError}
-          > Buscar
-          </Button>
+
+          <Button onClick={filtrarImoveis} error={buttonError}>Buscar</Button>
         </ContainerInput>
+
         {error && <ErroText>{error}</ErroText>}
       </ContainerFiltro>
     </Wrapper>

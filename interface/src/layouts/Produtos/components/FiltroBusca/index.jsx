@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ContainerInput, Codigo, IconDrop, ListaCompra, Input, Button, Wrapper, UlOptions, UlBairros, LiTipo, CheckBoxWrapper, CheckBox, CheckBoxLabel, ErroText, ContainerFiltro } from './style'
 import { IoIosArrowDropdownCircle } from "react-icons/io"
 
 const FiltroBusca = () => {
   const navigate = useNavigate()
+  
   const [produtos, setProdutos] = useState([])
-  const [showBairros, setShowBairros] = useState(false)
-  const [showTipo, setShowTipo] = useState(false)
-  const [showCompra, setShowCompra] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState(null) // controla o dropdown aberto
   const [selectedBairro, setSelectedBairro] = useState([])
   const [selectedTipo, setSelectedTipo] = useState([])
   const [selectedCompra, setSelectedCompra] = useState([])
   const [codigo, setCodigo] = useState('')
   const [error, setError] = useState('')
-  const [showErroMessage, setShowErroMessage] = useState(false)
+  const [showErroMessage] = useState(false)
   const [inputErro, setInputErro] = useState(false)
   const [buttonError, setButtonError] = useState(false)
+
+  const closeTimeout = useRef(null)
 
   useEffect(() => {
     if (error) {
@@ -26,42 +27,50 @@ const FiltroBusca = () => {
     }
   }, [selectedBairro, selectedCompra, selectedTipo, codigo])
 
-  const handleMouseEnter = (setter) => () => {
+  // --- Controle de dropdown ---
+  const handleMouseEnter = (name) => () => {
     if (window.innerWidth > 950) {
-      setter(true)
+      // se existir um timeout de fechamento, cancela
+      if (closeTimeout.current) {
+        clearTimeout(closeTimeout.current)
+        closeTimeout.current = null
+      }
+      setOpenDropdown(name)
     }
   }
 
-  const handleMouseLeave = (setter) => () => {
-    if (window.innerWidth > 950) {
-      setter(false)
+  const handleMouseLeave = (name) => () => {
+    if (window.innerWidth > 950 && openDropdown === name) {
+      // aguarda 500ms antes de fechar
+      closeTimeout.current = setTimeout(() => {
+        setOpenDropdown(null)
+      }, 500)
     }
   }
 
-  const handleDropdownClick = (setter) => () => {
-    setter((prev) => !prev)
+  const handleDropdownClick = (name) => () => {
+    if (window.innerWidth <= 1250) {
+      setOpenDropdown(prev => prev === name ? null : name)
+    }
   }
 
+  // --- Seleções ---
   const handleBairroChange = (bairro) => {
-    if (selectedBairro.includes(bairro)) {
-      setSelectedBairro(selectedBairro.filter(item => item !== bairro))
-    } else {
-      setSelectedBairro([...selectedBairro, bairro])
-    }
+    setSelectedBairro(prev =>
+      prev.includes(bairro) ? prev.filter(item => item !== bairro) : [...prev, bairro]
+    )
   }
+
   const handleTipoChange = (tipo) => {
-    if (selectedTipo.includes(tipo)) {
-      setSelectedTipo(selectedTipo.filter(item => item !== tipo))
-    } else {
-      setSelectedTipo([...selectedTipo, tipo])
-    }
+    setSelectedTipo(prev =>
+      prev.includes(tipo) ? prev.filter(item => item !== tipo) : [...prev, tipo]
+    )
   }
+
   const handleTransacaoChange = (disponibilidade) => {
-    if (selectedCompra.includes(disponibilidade)) {
-      setSelectedCompra(selectedCompra.filter(item => item !== disponibilidade))
-    } else {
-      setSelectedCompra([...selectedCompra, disponibilidade])
-    }
+    setSelectedCompra(prev =>
+      prev.includes(disponibilidade) ? prev.filter(item => item !== disponibilidade) : [...prev, disponibilidade]
+    )
   }
 
   const filtrarImoveis = () => {
@@ -93,17 +102,15 @@ const FiltroBusca = () => {
           return response.json();
         })
         .then((data) => {
-          console.log('ID selecionado :', data)
           setProdutos(data)
 
           if (data.length > 0) {
             navigate(`/imovel?id=${imovelID}`);
           } else {
-            console.log('Não foram encontrados imóveis com o código fornecido.')
+            setError('Não foram encontrados imóveis com os filtros selecionados.')
           }
         })
         .catch((error) => {
-          console.error('Erro ao buscar imóvel por ID:', error)
           setError('Erro ao buscar imóvel por ID');
         })
       return
@@ -144,7 +151,6 @@ const FiltroBusca = () => {
           }
         })
         .catch((error) => {
-          console.error('Erro ao buscar imóveis:', error)
           setError('Erro ao buscar imóveis')
           setInputErro(false)
           setButtonError(true)
@@ -156,45 +162,28 @@ const FiltroBusca = () => {
 
   }
 
-  const getDisplayTextTipo = () => {
-    return selectedTipo.length === 0 ? 'Tipo de imóveis' : selectedTipo.join(', ')
-  }
-
-  const getDisplayTextBairro = () => {
-    if (selectedBairro.length === 0) {
-      return 'Filtrar bairros'
-    } else if (selectedBairro.length > 2) {
-      return `${selectedBairro.slice(0, 2).join(', ')} ... ${selectedBairro.length - 2}`
-    } else {
-      return selectedBairro.join(', ')
-    }
-  }
-
-  const getDisplayTextCompra = () => {
-    return selectedCompra.length === 0 ? 'Venda / Aluguel' : selectedCompra.join(', ');
-  }
-
   return (
     <Wrapper>
       <ContainerFiltro>
         <ContainerInput>
           {showErroMessage && <ErroText error={error} />}
+
+          {/* Disponibilidade */}
           <Input
-            onMouseEnter={handleMouseEnter((setShowCompra))}
-            onMouseLeave={handleMouseLeave((setShowCompra))}
-            onClick={handleDropdownClick((setShowCompra))}
+            onMouseEnter={handleMouseEnter('compra')}
+            onMouseLeave={handleMouseLeave('compra')}
+            onClick={handleDropdownClick('compra')}
           >
-            {getDisplayTextCompra()}
-            <IconDrop>
-              <IoIosArrowDropdownCircle />
-            </IconDrop>
-            {showCompra && (
+            Disponibilidade
+            <IconDrop><IoIosArrowDropdownCircle /></IconDrop>
+            {openDropdown === 'compra' && (
               <UlOptions>
                 {['Alugar', 'Comprar'].map(disponibilidade => (
                   <LiTipo key={disponibilidade}>
                     <CheckBoxWrapper>
                       <CheckBox
                         type='checkbox'
+                        id={disponibilidade}
                         value={disponibilidade}
                         checked={selectedCompra.includes(disponibilidade)}
                         onChange={() => handleTransacaoChange(disponibilidade)}
@@ -206,22 +195,23 @@ const FiltroBusca = () => {
               </UlOptions>
             )}
           </Input>
+
+          {/* Imóveis */}
           <Input
-            onMouseEnter={handleMouseEnter((setShowTipo))}
-            onMouseLeave={handleMouseLeave((setShowTipo))}
-            onClick={handleDropdownClick((setShowTipo))}
+            onMouseEnter={handleMouseEnter('tipo')}
+            onMouseLeave={handleMouseLeave('tipo')}
+            onClick={handleDropdownClick('tipo')}
           >
-            {getDisplayTextTipo()}
-            <IconDrop>
-              <IoIosArrowDropdownCircle />
-            </IconDrop>
-            {showTipo && (
+            Imóveis
+            <IconDrop><IoIosArrowDropdownCircle /></IconDrop>
+            {openDropdown === 'tipo' && (
               <UlOptions>
                 {['Casa', 'Apartamento'].map(tipo => (
                   <LiTipo key={tipo}>
                     <CheckBoxWrapper>
                       <CheckBox
                         type='checkbox'
+                        id={tipo}
                         value={tipo}
                         checked={selectedTipo.includes(tipo)}
                         onChange={() => handleTipoChange(tipo)}
@@ -233,16 +223,16 @@ const FiltroBusca = () => {
               </UlOptions>
             )}
           </Input>
+
+          {/* Bairros */}
           <Input
-            onMouseEnter={handleMouseEnter((setShowBairros))}
-            onMouseLeave={handleMouseLeave((setShowBairros))}
-            onClick={handleDropdownClick((setShowBairros))}
+            onMouseEnter={handleMouseEnter('bairro')}
+            onMouseLeave={handleMouseLeave('bairro')}
+            onClick={handleDropdownClick('bairro')}
           >
-            {getDisplayTextBairro()}
-            <IconDrop>
-              <IoIosArrowDropdownCircle />
-            </IconDrop>
-            {showBairros && (
+            Bairro
+            <IconDrop><IoIosArrowDropdownCircle /></IconDrop>
+            {openDropdown === 'bairro' && (
               <UlOptions>
                 {['Bela Vista', 'Copacabana', 'Centro', 'Pinheiros', 'Botafogo', 'Barra da Tijuca'].map(bairro => (
                   <LiTipo key={bairro}>
@@ -261,21 +251,19 @@ const FiltroBusca = () => {
               </UlOptions>
             )}
           </Input>
+
           <Codigo
             placeholder='Código'
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
             error={inputErro}
           />
-          <Button
-            onClick={filtrarImoveis}
-            error={buttonError}
-          > Buscar
-          </Button>
+
+          <Button onClick={filtrarImoveis} error={buttonError}>Buscar</Button>
         </ContainerInput>
+
         {error && <ErroText>{error}</ErroText>}
       </ContainerFiltro>
-
     </Wrapper>
   )
 }

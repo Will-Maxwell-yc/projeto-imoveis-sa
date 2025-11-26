@@ -45,6 +45,8 @@ export const CardContent = styled.div`
         opacity: 1;
         visibility: visible;
     }
+
+    
 `
 
 export const Overlay = styled.div`
@@ -81,7 +83,6 @@ export const InfoIcon = styled.div`
 
 export const CardContainer = styled(SwiperSlide)`
     display: flex;
-    flex-direction: column;
     max-width: 458px;
     height: 650px;
     margin: 55px 17px;
@@ -99,6 +100,11 @@ export const CardContainer = styled(SwiperSlide)`
     &:hover {
         transform: scale(1.05); 
     }    
+
+    @media (max-width: 600px) {
+        max-width: 100%;
+        height: 600px;
+    }
 `
 
 export const Img = styled.img`
